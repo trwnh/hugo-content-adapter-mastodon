@@ -1,3 +1,6 @@
-assets/mastodon-archive/**
+assets/mastodon-archive/*.json
+assets/mastodon-archive/avatar.*
+assets/mastodon-archive/header.*
+assets/mastodon-archive/media_attachments/**
 resources/_cache/**
 public/

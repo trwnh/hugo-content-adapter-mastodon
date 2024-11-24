@@ -1,0 +1,18 @@
+{{ $status := .status_ctx }}
+{{ $account := .account_ctx }}
+{{ $avatar := $account.Resources.GetMatch "avatar.*" }}
+<article class="status h-entry">
+	<header class="status-header h-card">
+		<img src="{{ $avatar.Permalink }}" alt="" width="50" height="50" class="status-avatar u-logo u-photo">
+		<p class="status-author p-name">{{ $account.Params.mastodon.display_name }}</p>
+		<p class="status-meta"><a href="{{$status.Permalink}}" class="status-permalink"><time datetime="{{ $status.Date.UTC.Format "2006-01-02T15:04:05Z" }}" class="status-created_at">{{ $status.Date.Format "Jan 02, 2006 - 3:04 PM MST"}}</time></a></p>
+	</header>
+	<section class="status-prepend">
+		{{ with $status.Params.mastodon.spoiler_text }}
+		<p class="status-cw">{{ . }}</p>
+		{{ end }}
+	</section>
+	<section class="status-body">
+		{{ $status.Content }}
+	</section>
+</article>

@@ -1,0 +1,72 @@
+{{ $actor_data := dict }}
+{{ $actor_url := "https://mastodon.social/users/trwnh.json" }}
+{{ with resources.GetRemote $actor_url }}
+	{{ with .Err }}
+		{{ errorf "Unable to get remote resource %s: %s" $actor_url . }}
+	{{ else }}
+		{{ $actor_data = . | unmarshal }}
+	{{ end }}
+{{ else }}
+	{{ errorf "Unable to get remote resource %s" $actor_url }}
+{{ end }}
+
+{{ with $actor_data }}
+
+	{{ $username := .preferredUsername }}
+
+	{{/* Fetch and save avatar */}}
+	{{ $avatar_url := .icon.url }}
+	{{ with resources.GetRemote $avatar_url }}
+		{{ with .Err }}
+			{{ warnf "Unable to get avatar from %s with error: %s" $avatar_url . }}
+		{{ else }}
+			{{ $avatar_content := dict "mediaType" .MediaType.Type "value" .Content }}
+			{{ $avatar_resource := dict
+				"path" (printf "avatar.%s" (index .MediaType.Suffixes 0))
+				"content" $avatar_content
+			}}
+			{{ $.AddResource $avatar_resource }}
+		{{ end }}
+	{{ end }}
+
+	{{/* Fetch and save header */}}
+	{{ $header_url := .image.url }}
+	{{ with resources.GetRemote $header_url }}
+		{{ with .Err }}
+			{{ warnf "Unable to get header from %s with error: %s" $avatar_url . }}
+		{{ else }}
+			{{ $header_content := dict "mediaType" .MediaType.Type "value" .Content }}
+			{{ $header_resource := dict
+				"path" (printf "header.%s" (index .MediaType.Suffixes 0))
+				"content" $header_content
+			}}
+			{{ $.AddResource $header_resource }}
+		{{ end }}
+	{{ end }}
+
+	{{/* Add account page */}}
+	{{ $account_page := dict
+		"path" "."
+		"kind" "section"
+		"title" .name
+		"summary" (.summary | plainify)
+		"content" (dict
+			"mediaType" "text/html"
+			"value" ""
+		)
+		"type" "mastodon"
+		"layout" "user"
+		"params" (dict
+			"mastodon" (dict
+				"_model" "Account"
+				"username" .preferredUsername
+				"created_at" (.published | time)
+				"note" .summary
+				"display_name" .name
+				
+			)
+		)
+	}}
+	{{ $.AddPage $account_page }}
+
+{{ end }}

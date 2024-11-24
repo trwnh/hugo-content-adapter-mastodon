@@ -1,0 +1,166 @@
+{{ with resources.GetMatch "mastodon-archive/avatar.*" }}
+
+	{{ $avatar_content := dict "mediaType" .MediaType.Type "value" .Content }}
+	{{ $avatar_resource := dict
+		"path" (printf "avatar.%s" (index .MediaType.Suffixes 0))
+		"content" $avatar_content
+	}}
+	{{ $.AddResource $avatar_resource }}
+
+{{ end }}
+
+{{ with resources.GetMatch "mastodon-archive/header.*" }}
+
+	{{ $header_content := dict "mediaType" .MediaType.Type "value" .Content }}
+	{{ $header_resource := dict
+		"path" (printf "header.%s" (index .MediaType.Suffixes 0))
+		"content" $header_content
+	}}
+	{{ $.AddResource $header_resource }}
+
+{{ end }}
+
+{{ with unmarshal (resources.Get "mastodon-archive/actor.json") }}
+
+	{{ $account_page := dict
+		"path" "."
+		"kind" "section"
+		"title" .name
+		"summary" (.summary | plainify)
+		"content" (dict
+			"mediaType" "text/html"
+			"value" ""
+		)
+		"type" "mastodon"
+		"layout" "user"
+		"params" (dict
+			"mastodon" (dict
+				"_model" "Account"
+				"username" .preferredUsername
+				"created_at" (.published | time)
+				"note" .summary
+				"display_name" .name
+			)
+		)
+	}}
+	{{ $.AddPage $account_page }}
+
+{{ end }}
+
+{{ with unmarshal (resources.Get "mastodon-archive/outbox.json") }}
+
+	{{ $total := .totalItems }}
+	{{ $activities := last 1000 .orderedItems }}
+
+	{{ range $activities  }}
+
+		{{ $published := .published | time }}
+
+		{{/* Extract database ID to use as a path later */}}
+		{{ $status_id := 
+			.id
+			| strings.TrimPrefix .actor
+			| strings.TrimPrefix "/statuses/"
+			| strings.TrimSuffix "/activity"
+		}}
+
+		{{/* Calculate Mastodon-style visibility scope */}}
+		{{ $followers := printf "%s/followers" .actor }}
+		{{ $visibility := "direct" }}
+		{{ if or
+			(in .to "https://www.w3.org/ns/activitystreams#Public")
+			(in .to "as:Public")
+			(in .to "Public")
+		}}
+			{{ $visibility = "public" }}
+		{{ else if or
+			(in .cc "https://www.w3.org/ns/activitystreams#Public")
+			(in .cc "as:Public")
+			(in .cc "Public")
+		}}
+			{{ $visibility = "unlisted" }}
+		{{ else if or
+			(in .to $followers)
+			(in .cc $followers)
+		}}
+			{{ $visibility = "private" }}
+		{{ end }}
+
+		{{/* Convert Create activities into a status */}}
+		{{ if eq .type "Create" }}
+
+			{{/* Initialize Hugo Page and add it */}}
+			{{ $page := dict
+				"path" $status_id
+				"content" (dict
+					"mediaType" "text/html"
+					"value" .object.content
+				)
+				"dates" (dict
+					"date" $published
+				)
+				"type" "mastodon"
+				"layout" "status"
+				"params" (dict
+					"mastodon" (dict
+						"_model" "Status"
+						"_post_type" "original"
+						"id" $status_id
+						"visibility" $visibility
+						"spoiler_text" .object.summary
+					)
+				)
+			}}
+			{{ $.AddPage $page }}
+		
+		{{ else if eq .type "Announce" }}
+
+			{{ $page := dict
+				"path" $status_id
+				"dates" (dict
+					"date" $published
+				)
+				"type" "mastodon"
+				"layout" "status"
+				"params" (dict
+					"mastodon" (dict
+						"_model" "Status"
+						"_post_type" "reblog"
+						"_reblog_of_uri" .object
+					)
+				)
+			}}
+			{{ $.AddPage $page }}
+
+		{{ else }}
+
+			{{ $page := dict
+				"path" $status_id
+				"dates" (dict
+					"date" $published
+				)
+				"params" (dict
+					"mastodon" (dict
+						"_model" ""
+						"_post_type" "unknown"
+					)
+				)
+			}}
+			{{ $.AddPage $page }}
+
+		{{ end }}
+
+		{{/* Add the activity as a resource */}}
+		
+		{{ $resource := dict
+			"path" (printf "%s/activity" $status_id)
+			"content" (dict 
+				"mediaType" "application/json"
+				"value" (jsonify .)
+			)
+		}}
+		{{ $.AddResource $resource }}
+
+	{{ end }}
+
+{{ end }}

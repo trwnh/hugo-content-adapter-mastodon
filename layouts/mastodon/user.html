@@ -1,0 +1,226 @@
+{{ define "head" }}
+<style>
+	:root {
+		--color-primary-bg: #181821;
+		--color-primary-text: white;
+		--color-primary-text-faded: rgb(156, 156, 201);
+		--color-primary-accent: rgb(140, 141, 255);
+		--color-primary-link: var(--color-primary-accent);
+		--color-primary-link-visited: var(--color-primary-link);
+		--color-secondary-bg: #20202c;
+		--color-outline: rgb(49, 49, 68);
+		--radius: 10px;
+		--size-avatar: 100px;
+		--size-padding: calc(var(--spacing-1u, 10px) * 2);
+		--spacing-1u: 10px;
+
+		line-height: 1.6;
+	}
+	a {
+		word-break: break-all;
+	}
+	a:link {
+		color: var(--color-primary-link);
+	}
+	a:visited {
+		color: var(--color-primary-link-visited);
+	}
+	body {
+		margin: 0;
+		padding: 0;
+		background-color: var(--color-secondary-bg);
+	}
+	@media (min-width: 610px) {
+		main {
+			padding-block: var(--spacing-1u, 10px);
+		}
+	}
+	.main-title {
+		display: none;
+	}
+	.account, .statuses {
+		max-width: 600px;
+		margin-inline: auto;
+		background-color: var(--color-primary-bg);
+		color: var(--color-primary-text);
+	}
+	.account {
+
+	}
+	.account-prepend {
+		background-color: var(--color-primary-bg);
+		color: rgb(140, 141, 255);
+		margin: 0;
+		padding: 1rem;
+		padding-inline: var(--size-padding, 20px);
+		border-color: var(--color-outline);
+		border-style: solid;
+		border-width: 1px;
+		font-size: 1rem;
+	}
+	.account-images {
+		position: relative;
+	}
+	.account-header {
+		display: block;
+		width: 100%;
+		height: 150px;
+		object-fit: cover;
+		background-color: var(--color-primary-accent);
+	}
+	.account-avatar {
+		display: block;
+		width: var(--size-avatar, 100px);
+		height: var(--size-avatar, 100px);
+		background-color: var(--color-primary-bg);
+		border-color: var(--color-outline);
+		border-style: solid;
+		border-width: 1px;
+		border-radius: var(--radius, 10px);
+		position: absolute;
+		inset-inline-start: var(--size-padding, 20px);
+		inset-block-end: calc(var(--size-avatar, 100px) / 2 * -1);
+	}
+	.account-info {
+		padding-inline: var(--size-padding, 20px);
+		padding-block-start: calc(var(--size-avatar, 100px) / 2);
+		padding-block-end: var(--size-padding, 20px)
+	}
+	.account-display_name {
+		font-weight: bolder;
+		font-size: 1.5rem;
+		line-height: 2;
+		margin: 0;
+	}
+	.account-bio {
+
+	}
+	.account-bio *:first-child {
+		margin-block-start: 0;
+	}
+	.account-bio *:last-child {
+		margin-block-end: 0;
+	}
+	.account-created_at {
+		margin: 0;
+		margin-block-start: var(--size-padding, 20px);
+		color: var(--color-primary-text-faded);
+	}
+	.statuses {
+		
+	}
+	.statuses-prepend {
+		margin: 0;
+		padding: 1rem;
+		padding-inline: var(--size-padding, 20px);
+		font-size: 1rem;
+		color: rgb(140, 141, 255);
+		border-color: var(--color-outline);
+		border-style: solid;
+		border-width: 1px;
+		border-inline: 0;
+	}
+	.statuses-empty-hint {
+		margin: 0;
+		padding: var(--size-padding, 20px);
+	}
+	.statuses > ul, .statuses > ul > li {
+		display: contents;
+	}
+	.status {
+		border-color: var(--color-outline);
+		border-style: solid;
+		border-width: 1px;
+		border-inline: 0;
+		border-block-start: 0;
+		padding: var(--size-padding, 20px);
+		box-sizing: border-box;
+	}
+	.statuses > ul > li:last-child .status {
+		border-block-end: 0;
+	}
+	.status-header {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		grid-template-rows: 1fr 1fr;
+		column-gap: var(--spacing-1u, 10px);
+		place-items: center start;
+	}
+	.status-avatar {
+		grid-column: 1;
+		grid-row: 1 / span 2;
+		width: 50px;
+		height: 50px;
+	}
+	.status-author {
+		margin: 0;
+		grid-column: 2;
+		grid-row: 1;
+		line-height: 25px;
+	}
+	.status-meta {
+		margin: 0;
+		grid-column: 2;
+		grid-row: 2;
+		line-height: 25px;
+	}
+	.status-prepend {
+		
+	}
+	.status-cw {
+		background-color: hsl(50,100%,50%,10%);
+		padding: 0.5rem 1rem;
+		border-inline: thick solid goldenrod;
+	}
+	.status-body {
+
+	}
+	@media (min-width: 480px) {
+		.status-cw, .status-body {
+			margin-left: 60px;
+		}
+	}
+</style>
+{{ end }}
+
+{{ define "body" }}
+<body>
+	<main class="user-profile h-feed">
+		<h1 class="main-title">Mastodon/User view</h1>
+		<section class="account h-card">
+			<h2 class="account-prepend">Account</h2>
+			<div class="account-images">
+				{{ $header := .Resources.GetMatch "header.*" }}
+				{{ with $header }}
+					<img class="account-header" src="{{.Permalink}}" alt="" width="320">
+				{{ else }}
+					<div class="account-header"></div>
+				{{ end }}
+				{{ $avatar := .Resources.GetMatch "avatar.*" }}
+				{{ with $avatar }}
+					<img class="account-avatar u-logo u-photo" src="{{.Permalink}}" alt="" width="120" height="120">
+				{{ end }}
+			</div>
+			<div class="account-info">
+				<p class="account-display_name p-name">{{ .Params.mastodon.display_name }}</p>
+				<div class="account-bio e-summary">{{ .Params.mastodon.note | safeHTML }}</div>
+				<p class="account-created_at">Created <time datetime="{{.Params.mastodon.created_at.Format "2006-01-02"}}" class="dt-published">{{.Params.mastodon.created_at.Format "January 2, 2006"}}</time></p>
+			</div>
+		</section>
+		<section class="statuses">
+			<h2 class="statuses-prepend">Statuses</h2>
+			{{ with where .RegularPages "Params.mastodon.visibility" "public" }}
+				<ul>
+					{{ range . }}
+						<li>
+							{{ partial "mastodon/status.html" (dict "status_ctx" . "account_ctx" $) }}
+						</li>
+					{{ end }}
+				</ul>
+			{{ else }}
+				<p class="statuses-empty-hint">No statuses</p>
+			{{ end }}
+		</section>
+	</main>
+</body>
+{{ end }}

@@ -1,0 +1,28 @@
+{{ define "head" }}
+<style>
+
+</style>
+{{ end }}
+
+{{ define "body" }}
+<body>
+	<main>
+		<h1>Mastodon/Statuses view</h1>
+		<ul>
+			{{ range where .RegularPages.ByDate "Params.mastodon.visibility" "public" }}
+				<li>
+					{{ with .Params.mastodon._reblog_of_uri }}
+						<div>Reblogged {{ . }}</div>
+					{{ else }}
+						{{ with .Params.mastodon.spoiler_text }}
+							<p style="border-inline: thick solid gold; background: #ddd">{{.}}</p>
+						{{ end }}
+						<div>{{.Content}}</div>
+					{{ end }}
+					<a href="{{.Permalink}}">{{.Permalink}}</a>
+				</li>
+			{{ end }}
+		</ul>
+	</main>
+</body>
+{{ end }}

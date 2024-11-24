@@ -1,0 +1,38 @@
+{{ define "head" }}
+<style>
+
+</style>
+{{ end }}
+
+{{ define "body" }}
+<body>
+	<main>
+		<h1>Mastodon/Status view</h1>
+		
+		<h2>Status</h2>
+		
+		{{ with .Params.mastodon.spoiler_text }}
+		<p>{{.}}</p>
+		{{ end }}
+
+		{{ with .Content }}
+		<div class="status__content">{{.}}</div>
+		{{ end }}
+
+		<h2>Status params</h2>
+
+		<dl>
+			{{ range $k, $v := .Params.mastodon }}
+			<dt>{{$k}}</dt>
+			<dd>{{$v}}</dd>
+			{{ end }}
+		</dl>
+
+		<h2>Activity</h2>
+		{{ with .Resources.Get "activity" }}
+		<pre>{{.Content | unmarshal | jsonify (dict "indent" "  ") }}</pre>
+		{{ end }}
+
+	</main>
+</body>
+{{ end }}
